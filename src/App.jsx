@@ -25,7 +25,19 @@ function App() {
   const [hoveredDrone, setHoveredDrone] = useState(null)
   const [preSelectionZoom, setPreSelectionZoom] = useState(null)
   const [mapAnimationComplete, setMapAnimationComplete] = useState(false)
-  
+  const [criticalBatteryFilter, setCriticalBatteryFilter] = useState(false)
+
+  const displayedDrones = criticalBatteryFilter
+    ? drones.filter(d => d.battery < 20)
+    : drones
+
+  // Clear selection when selected drone is filtered out
+  useEffect(() => {
+    if (criticalBatteryFilter && selectedDrone && !displayedDrones.find(d => d.id === selectedDrone)) {
+      setSelectedDrone(null)
+    }
+  }, [criticalBatteryFilter, displayedDrones, selectedDrone])
+
   const mapRef = useRef(null)
 
   // Preload drone images when app loads
@@ -122,7 +134,7 @@ function App() {
           mapStyle="mapbox://styles/mapbox/dark-v11"
           mapboxAccessToken={import.meta.env.VITE_MAPBOX_TOKEN}
         >
-          {drones.map(drone => (
+          {displayedDrones.map(drone => (
             <Marker
               key={drone.id}
               longitude={drone.coordinates.lng}
@@ -158,11 +170,13 @@ function App() {
       </div>
 
       <FleetTable
-        drones={drones}
+        drones={displayedDrones}
         selectedDrone={selectedDrone}
         onDroneSelect={handleDroneSelect}
         onDroneHover={handleTableHover}
         showTable={mapAnimationComplete}
+        criticalBatteryFilter={criticalBatteryFilter}
+        onCriticalBatteryFilterChange={setCriticalBatteryFilter}
       />
 
       {/* Active card - key ensures fresh animation on drone change */}
