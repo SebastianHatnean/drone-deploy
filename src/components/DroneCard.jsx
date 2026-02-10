@@ -1,19 +1,6 @@
 import { useEffect } from 'react'
 import { getStatusDisplay, getDroneCapacity, getDroneDescription, generateMockHistory } from '../utils/droneHelpers'
-import skyrunnerX1 from '../assets/skyrunnerX1.png'
-import skyrunnerX2 from '../assets/skyrunnerX2.png'
-import skyrunnerX1Taxi1 from '../assets/taxi-drone-1.png'
-import skyrunnerX1Taxi2 from '../assets/taxi-drone-2.png'
-import skyrunnerX1Taxi3 from '../assets/taxi-drone-3.png'
-import droneMockup from '../assets/drone-mockup.png'
-
-const droneImages = {
-  'Skyrunner X1': skyrunnerX1,
-  'Skyrunner X2': skyrunnerX2,
-  'Skyrunner X1 Taxi 1': skyrunnerX1Taxi1,
-  'Skyrunner X1 Taxi 2': skyrunnerX1Taxi2,
-  'Skyrunner X1 Taxi 3': skyrunnerX1Taxi3,
-}
+import { getDroneImage } from '../utils/droneImages'
 
 function DroneCard({ drone, onClose }) {
   // #region agent log
@@ -56,7 +43,7 @@ function DroneCard({ drone, onClose }) {
       {/* Drone Image */}
       <div className="drone-card-image">
         <img 
-          src={droneImages[drone.name] || droneMockup} 
+          src={getDroneImage(drone.model ?? drone.name)} 
           alt={drone.name}
           onError={(e) => {
             e.target.style.display = 'none'
@@ -66,7 +53,7 @@ function DroneCard({ drone, onClose }) {
 
       {/* Title Section */}
       <div className="drone-card-title">
-        <h2 className="drone-name">Volta {drone.name}</h2>
+        <h2 className="drone-name">{drone.name}</h2>
         <p className="drone-subtitle">Light Utility Civilian Helicopter</p>
       </div>
 

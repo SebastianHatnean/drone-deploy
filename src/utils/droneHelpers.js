@@ -37,11 +37,14 @@ export function getMarkerColor(drone) {
   
   /**
    * Get drone passenger capacity based on model name
-   * @param {string} droneName - Drone model name
+   * Larger models: Sirocco Pax, Sky-Shuttle, VertiBus = 6 Pax
+   * @param {string} droneName - Drone model name (e.g. Dragonfly, Sirocco Pax)
    * @returns {string} Capacity string (e.g., "4 Pax")
    */
   export function getDroneCapacity(droneName) {
-    return droneName.includes('X2') ? '6 Pax' : '4 Pax'
+    const baseModel = (droneName || '').split('-')[0]
+    const sixPaxModels = ['Sirocco', 'Sky', 'VertiBus']
+    return sixPaxModels.some((m) => baseModel?.startsWith(m)) ? '6 Pax' : '4 Pax'
   }
   
   /**
