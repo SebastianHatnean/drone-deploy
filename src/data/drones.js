@@ -30,6 +30,15 @@ function calculateRange(battery) {
       coordinates: { lat: 51.5085, lng: -0.1280 } // Slightly offset from Big Ben
       },
       {
+        id: 'DR-001-taxi-3',
+        status: 'standby',
+        battery: 92,
+        name: 'Skyrunner X1 Taxi 3',
+        range: calculateRange(92),
+        load: 0,
+        coordinates: { lat: 51.5080, lng: -0.1385 } // Slightly offset from Big Ben
+      },
+      {
         id: 'DR-001',
         status: 'standby',
         battery: 92,

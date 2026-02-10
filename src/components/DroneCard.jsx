@@ -1,17 +1,6 @@
 import { useEffect } from 'react'
-import { getStatusDisplay, getDroneCapacity, getDroneDescription } from '../utils/droneHelpers'
-import skyrunnerX1 from '../assets/skyrunnerX1.png'
-import skyrunnerX2 from '../assets/skyrunnerX2.png'
-import skyrunnerX1Taxi1 from '../assets/taxi-drone-1.png'
-import skyrunnerX1Taxi2 from '../assets/taxi-drone-2.png'
-import droneMockup from '../assets/drone-mockup.png'
-
-const droneImages = {
-  'Skyrunner X1': skyrunnerX1,
-  'Skyrunner X2': skyrunnerX2,
-  'Skyrunner X1 Taxi 1': skyrunnerX1Taxi1,
-  'Skyrunner X1 Taxi 2': skyrunnerX1Taxi2,
-}
+import { getStatusDisplay, getDroneCapacity, getDroneDescription, generateMockHistory } from '../utils/droneHelpers'
+import { getDroneImage } from '../utils/droneImages'
 
 function DroneCard({ drone, onClose }) {
   // #region agent log
@@ -28,6 +17,7 @@ function DroneCard({ drone, onClose }) {
   const statusInfo = getStatusDisplay(drone)
   const capacity = getDroneCapacity(drone.name)
   const description = getDroneDescription(drone.name)
+  const recentFlights = generateMockHistory(drone.id)
 
   // #region agent log
   fetch('http://127.0.0.1:7243/ingest/8e58a966-9876-4f24-bc09-47b74c79ad18',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'DroneCard.jsx:render',message:'DroneCard rendering',data:{droneId:drone?.id},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'B',runId:'post-fix'})}).catch(()=>{});
@@ -53,7 +43,7 @@ function DroneCard({ drone, onClose }) {
       {/* Drone Image */}
       <div className="drone-card-image">
         <img 
-          src={droneImages[drone.name] || droneMockup} 
+          src={getDroneImage(drone.model ?? drone.name)} 
           alt={drone.name}
           onError={(e) => {
             e.target.style.display = 'none'
@@ -63,7 +53,7 @@ function DroneCard({ drone, onClose }) {
 
       {/* Title Section */}
       <div className="drone-card-title">
-        <h2 className="drone-name">Volta {drone.name}</h2>
+        <h2 className="drone-name">{drone.name}</h2>
         <p className="drone-subtitle">Light Utility Civilian Helicopter</p>
       </div>
 
@@ -118,6 +108,27 @@ function DroneCard({ drone, onClose }) {
 
       {/* Description */}
       <p className="drone-card-description">{description}</p>
+
+      {/* Recent Flights */}
+      <div className="drone-card-flights">
+        <h3 className="drone-card-flights-title">Recent Flights</h3>
+        <ul className="drone-card-flights-list">
+          {recentFlights.map((flight, i) => (
+            <li key={i} className="flight-item">
+              <div className="flight-header">
+                <span className="flight-time">{flight.time}</span>
+                <span className={`flight-status flight-status-${flight.status.toLowerCase()}`}>
+                  {flight.status}
+                </span>
+              </div>
+              <div className="flight-route">
+                {flight.from} → {flight.to}
+              </div>
+              <div className="flight-duration">{flight.duration}</div>
+            </li>
+          ))}
+        </ul>
+      </div>
 
       {/* Action Button */}
       <button className="drone-card-button">

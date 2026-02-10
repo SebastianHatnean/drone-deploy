@@ -21,7 +21,9 @@ export default function FleetTable({
   selectedDrone, 
   onDroneSelect, 
   onDroneHover,
-  showTable = true
+  showTable = true,
+  criticalBatteryFilter = false,
+  onCriticalBatteryFilterChange
 }) {
   const [isExpanded, setIsExpanded] = useState(false)
   const hoverTimeoutRef = useRef(null)
@@ -67,9 +69,27 @@ export default function FleetTable({
   const visibleDrones = sortedDrones
 
   return (
-    <div className={`fleet-table ${showTable ? 'visible' : ''}`}>
+    <div className={`fleet-table ${showTable ? 'visible' : ''} ${criticalBatteryFilter ? 'critical-battery-mode' : ''}`}>
       {/* Header */}
       <h2 className="fleet-table-title">FLEET OVERVIEW</h2>
+
+      {/* Critical Battery Filter Toggle */}
+      <button
+        type="button"
+        className={`fleet-filter-toggle ${criticalBatteryFilter ? 'active' : ''}`}
+        onClick={() => onCriticalBatteryFilterChange?.(!criticalBatteryFilter)}
+        aria-pressed={criticalBatteryFilter}
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="filter-icon">
+          <rect x="2" y="7" width="16" height="10" rx="2" stroke="currentColor" strokeWidth="2"/>
+          <path d="M18 10H19C20.1046 10 21 10.8954 21 12C21 13.1046 20.1046 14 19 14H18" stroke="currentColor" strokeWidth="2"/>
+          <path d="M7 10V14" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+        </svg>
+        <span>Critical Battery (&lt;20%)</span>
+        {criticalBatteryFilter && (
+          <span className="filter-badge" aria-hidden>ON</span>
+        )}
+      </button>
 
       {/* Status Cards */}
       <div className="fleet-status-cards">
