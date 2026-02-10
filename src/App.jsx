@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import Map, { Marker, Popup } from 'react-map-gl/mapbox'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import './App.css'
-import drones from './data/drones'
+import { cities, getCityById } from './data/locations'
 import { getMarkerColor } from './utils/droneHelpers'
 import DronePopup from './components/DronePopup'
 import DroneCard from './components/DroneCard'
@@ -11,14 +11,18 @@ import skyrunnerX1 from './assets/skyrunnerX1.png'
 import skyrunnerX2 from './assets/skyrunnerX2.png'
 import droneMockup from './assets/drone-mockup.png'
 
-const ZOOM_INCREMENT = 0.5; // Configurable zoom-in amount
-const DEFAULT_ZOOM = 12;
+const ZOOM_INCREMENT = 0.5
+const DEFAULT_ZOOM = 12
 
 function App() {
+  const [activeCityId, setActiveCityId] = useState(cities[0].id)
+  const activeCity = getCityById(activeCityId)
+  const drones = activeCity.drones
+
   const [viewState, setViewState] = useState({
-    longitude: -0.1276,
-    latitude: 51.5074,
-    zoom: DEFAULT_ZOOM + 0.5 // Start zoomed in
+    longitude: activeCity.center.lng,
+    latitude: activeCity.center.lat,
+    zoom: DEFAULT_ZOOM + 0.5
   })
 
   const [selectedDrone, setSelectedDrone] = useState(null)
@@ -40,6 +44,30 @@ function App() {
 
   const mapRef = useRef(null)
 
+  const isInitialMount = useRef(true)
+
+  // Fly to city when switching (skip on initial mount)
+  useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false
+      return
+    }
+    setSelectedDrone(null)
+    setViewState({
+      longitude: activeCity.center.lng,
+      latitude: activeCity.center.lat,
+      zoom: activeCity.zoom + 0.5
+    })
+    if (mapRef.current) {
+      mapRef.current.flyTo({
+        center: [activeCity.center.lng, activeCity.center.lat],
+        zoom: activeCity.zoom,
+        duration: 1200,
+        essential: true
+      })
+    }
+  }, [activeCityId, activeCity])
+
   // Preload drone images when app loads
   useEffect(() => {
     const imagesToPreload = [skyrunnerX1, skyrunnerX2, droneMockup]
@@ -54,7 +82,7 @@ function App() {
   const handleMapLoad = () => {
     if (mapRef.current) {
       mapRef.current.easeTo({
-        zoom: DEFAULT_ZOOM,
+        zoom: activeCity.zoom,
         duration: 1000,
         easing: (t) => 1 - Math.pow(1 - t, 3) // Cubic ease-out
       })
@@ -125,6 +153,23 @@ function App() {
 
   return (
     <>
+      {/* City Selector */}
+      <div className="city-selector">
+        <label htmlFor="city-select" className="city-selector-label">City</label>
+        <select
+          id="city-select"
+          className="city-select"
+          value={activeCityId}
+          onChange={(e) => setActiveCityId(e.target.value)}
+        >
+          {cities.map((city) => (
+            <option key={city.id} value={city.id}>
+              {city.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
       <div className="map-container">
         <Map
           ref={mapRef}
