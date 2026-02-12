@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { getCityById } from '../data/locations'
+import { loadBatteryLevels, saveBatteryLevel } from '../utils/batteryStorage'
 import {
   ZOOM_INCREMENT,
   DEFAULT_ZOOM,
@@ -21,7 +22,19 @@ export function useFleetDashboard({ cities, mapRef }) {
   const defaultCity = cities[0]
   const [activeCityId, setActiveCityId] = useState(defaultCity?.id)
   const activeCity = getCityById(activeCityId)
-  const drones = activeCity?.drones ?? []
+  const rawDrones = activeCity?.drones ?? []
+
+  const [batteryOverrides, setBatteryOverrides] = useState(loadBatteryLevels)
+
+  // Merge drones with persisted battery levels; recalculate range when battery is overridden
+  const drones = rawDrones.map((d) => {
+    const storedBattery = batteryOverrides[d.id]
+    if (storedBattery == null) return d
+    const battery = Number(storedBattery)
+    if (Number.isNaN(battery)) return d
+    const range = battery < 25 ? 8 : battery < 50 ? 18 : 35
+    return { ...d, battery, range }
+  })
 
   const [viewState, setViewState] = useState({
     longitude: activeCity?.center?.lng ?? 0,
@@ -134,6 +147,12 @@ export function useFleetDashboard({ cities, mapRef }) {
     }
   }
 
+  /** Update drone battery (after charging) and persist to localStorage */
+  const updateDroneBattery = (droneId, battery) => {
+    setBatteryOverrides((prev) => ({ ...prev, [droneId]: battery }))
+    saveBatteryLevel(droneId, battery)
+  }
+
   return {
     activeCityId,
     setActiveCityId,
@@ -151,6 +170,7 @@ export function useFleetDashboard({ cities, mapRef }) {
     handleMapLoad,
     handleDroneSelect,
     handleDroneDeselect,
-    handleTableHover
+    handleTableHover,
+    updateDroneBattery
   }
 }

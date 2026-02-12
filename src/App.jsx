@@ -21,6 +21,7 @@ function App() {
     setActiveCityId,
     drones,
     displayedDrones,
+    updateDroneBattery,
     viewState,
     setViewState,
     selectedDrone,
@@ -82,6 +83,7 @@ function App() {
           key={selectedDrone}
           drone={selectedDroneData}
           onClose={handleDroneDeselect}
+          onBatteryUpdate={updateDroneBattery}
         />
       )}
     </>

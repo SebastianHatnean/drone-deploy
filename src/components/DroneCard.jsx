@@ -1,8 +1,29 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { getStatusDisplay, getDroneCapacity, getDroneDescription, generateMockHistory } from '../utils/droneHelpers'
 import { getDroneImage } from '../utils/droneImages'
+import ChargingState from './ChargingState'
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog'
 
-function DroneCard({ drone, onClose }) {
+function DroneCard({ drone, onClose, onBatteryUpdate }) {
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [chargeView, setChargeView] = useState('confirm') // 'confirm' | 'charging'
+
+  const handleOpenChange = (open) => {
+    setIsDialogOpen(open)
+    if (!open) setChargeView('confirm')
+  }
+
+  const handleStartCharging = () => {
+    setChargeView('charging')
+  }
   // #region agent log
   useEffect(() => {
     fetch('http://127.0.0.1:7243/ingest/8e58a966-9876-4f24-bc09-47b74c79ad18',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'DroneCard.jsx:mount',message:'DroneCard mounted',data:{droneId:drone?.id,droneName:drone?.name},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'D',runId:'post-fix'})}).catch(()=>{});
@@ -131,12 +152,33 @@ function DroneCard({ drone, onClose }) {
       </div>
 
       {/* Action Button */}
-      <button className="drone-card-button">
-        Charge now
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-          <path d="M7 4L13 10L7 16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-        </svg>
-      </button>
+      <Dialog open={isDialogOpen} onOpenChange={handleOpenChange}>
+        <DialogTrigger asChild>
+          <button className="drone-card-button" disabled={drone.battery >= 100}>
+            Charge now
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <path d="M7 4L13 10L7 16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
+        </DialogTrigger>
+        {chargeView === 'confirm' ? (
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Charge {drone.name}</DialogTitle>
+              <DialogDescription>
+                Start charging {drone.name}? Current battery level is {drone.battery}%.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <button className="drone-card-button" type="button" onClick={handleStartCharging}>
+                Start charging
+              </button>
+            </DialogFooter>
+          </DialogContent>
+        ) : (
+          <ChargingState drone={drone} onBatteryComplete={onBatteryUpdate} />
+        )}
+      </Dialog>
     </div>
   )
 }
