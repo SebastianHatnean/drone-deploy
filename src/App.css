@@ -431,6 +431,17 @@
   box-shadow: 0 4px 12px rgba(255, 255, 255, 0.3);
 }
 
+.drone-card-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.drone-card-button:disabled:hover {
+  transform: none;
+  box-shadow: none;
+}
+
 .drone-card-button svg {
   stroke: #000000;
 }

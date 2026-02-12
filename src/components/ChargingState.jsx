@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
   DialogContent,
   DialogHeader,
@@ -9,8 +9,9 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 
-function ChargingState({ drone }) {
+function ChargingState({ drone, onBatteryComplete }) {
   const [chargeProgress, setChargeProgress] = useState(drone?.battery ?? 0)
+  const hasReportedComplete = useRef(false)
 
   useEffect(() => {
     if (chargeProgress >= 100) return
@@ -19,6 +20,13 @@ function ChargingState({ drone }) {
     }, 300)
     return () => clearInterval(interval)
   }, [chargeProgress])
+
+  useEffect(() => {
+    if (chargeProgress >= 100 && drone?.id && onBatteryComplete && !hasReportedComplete.current) {
+      hasReportedComplete.current = true
+      onBatteryComplete(drone.id, 100)
+    }
+  }, [chargeProgress, drone?.id, onBatteryComplete])
 
   const isComplete = chargeProgress >= 100
 

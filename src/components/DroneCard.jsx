@@ -12,7 +12,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 
-function DroneCard({ drone, onClose }) {
+function DroneCard({ drone, onClose, onBatteryUpdate }) {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [chargeView, setChargeView] = useState('confirm') // 'confirm' | 'charging'
 
@@ -154,7 +154,7 @@ function DroneCard({ drone, onClose }) {
       {/* Action Button */}
       <Dialog open={isDialogOpen} onOpenChange={handleOpenChange}>
         <DialogTrigger asChild>
-          <button className="drone-card-button">
+          <button className="drone-card-button" disabled={drone.battery >= 100}>
             Charge now
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
               <path d="M7 4L13 10L7 16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -176,7 +176,7 @@ function DroneCard({ drone, onClose }) {
             </DialogFooter>
           </DialogContent>
         ) : (
-          <ChargingState drone={drone} />
+          <ChargingState drone={drone} onBatteryComplete={onBatteryUpdate} />
         )}
       </Dialog>
     </div>
