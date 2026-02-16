@@ -119,7 +119,8 @@ export function useFleetDashboard({ cities, mapRef }) {
         })
       }
     }
-  }, [activeCityId, activeCity, mapRef, drones])
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only run on city switch, not when drones reference changes
+  }, [activeCityId, activeCity, mapRef])
 
   /** Called when map finishes loading - fit bounds to show all drones and routes */
   const handleMapLoad = () => {
