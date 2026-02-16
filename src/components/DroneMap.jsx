@@ -1,5 +1,5 @@
 import { forwardRef } from 'react'
-import Map, { Marker, Popup } from 'react-map-gl/mapbox'
+import Map, { Marker, Popup, Source, Layer } from 'react-map-gl/mapbox'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import { getMarkerColor } from '../utils/droneHelpers'
 import DronePopup from './DronePopup'
@@ -9,6 +9,8 @@ import DronePopup from './DronePopup'
  *
  * @param {Object} props
  * @param {Array} props.drones - List of drone objects to display as markers
+ * @param {Array} [props.deliveringDronesWithTrips] - Delivering drones with tripRoute
+ * @param {function(Object): {lat, lng}} [props.getDronePosition] - Get animated position for delivering drones
  * @param {Object} props.viewState - { longitude, latitude, zoom } for map position
  * @param {function(Object): void} props.onMove - Called when map moves, receives evt.viewState
  * @param {function(): void} props.onLoad - Called when map finishes loading
@@ -22,6 +24,8 @@ import DronePopup from './DronePopup'
 const DroneMap = forwardRef(function DroneMap(
   {
     drones,
+    deliveringDronesWithTrips = [],
+    getDronePosition,
     viewState,
     onMove,
     onLoad,
@@ -34,6 +38,13 @@ const DroneMap = forwardRef(function DroneMap(
   },
   ref
 ) {
+  const getMarkerCoords = (drone) => {
+    if (drone.status === 'delivering' && drone.tripRoute && getDronePosition) {
+      return getDronePosition(drone)
+    }
+    return drone.coordinates
+  }
+
   return (
     <div className="map-container">
       <Map
@@ -44,15 +55,47 @@ const DroneMap = forwardRef(function DroneMap(
         mapStyle={mapStyle}
         mapboxAccessToken={mapboxToken}
       >
+        {/* Route polylines for delivering drones */}
+        {deliveringDronesWithTrips
+          .filter((d) => d.tripRoute && d.tripRoute.length > 0)
+          .map((drone) => (
+            <Source
+              key={`route-${drone.id}`}
+              id={`route-${drone.id}`}
+              type="geojson"
+              data={{
+                type: 'Feature',
+                geometry: {
+                  type: 'LineString',
+                  coordinates: drone.tripRoute
+                }
+              }}
+            >
+              <Layer
+                id={`route-layer-${drone.id}`}
+                type="line"
+                paint={{
+                  'line-color': '#3DA9FF',
+                  'line-width': 3
+                }}
+                layout={{
+                  'line-join': 'round',
+                  'line-cap': 'round'
+                }}
+              />
+            </Source>
+          ))}
+
         {drones.map((drone) => {
           const isSelected = selectedDroneId === drone.id
           const markerColor = getMarkerColor(drone)
+          const coords = getMarkerCoords(drone)
 
           return (
             <Marker
               key={drone.id}
-              longitude={drone.coordinates.lng}
-              latitude={drone.coordinates.lat}
+              longitude={coords.lng}
+              latitude={coords.lat}
             >
               <div
                 className={`marker ${isSelected ? 'radar-effect' : ''}`}
@@ -72,8 +115,8 @@ const DroneMap = forwardRef(function DroneMap(
         {/* Hover popup - only show when not the selected drone */}
         {hoveredDrone && hoveredDrone.id !== selectedDroneId && (
           <Popup
-            longitude={hoveredDrone.coordinates.lng}
-            latitude={hoveredDrone.coordinates.lat}
+            longitude={getMarkerCoords(hoveredDrone).lng}
+            latitude={getMarkerCoords(hoveredDrone).lat}
             closeButton={false}
             closeOnClick={false}
             anchor="bottom"

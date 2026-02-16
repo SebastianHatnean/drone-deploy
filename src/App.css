@@ -594,6 +594,146 @@
   }
 }
 
+/* Ongoing Trips Panel */
+.ongoing-trips-panel {
+  position: fixed;
+  top: 76px;
+  right: 24px;
+  width: 350px;
+  max-height: 280px;
+  background: rgba(23, 23, 23, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 24px;
+  padding: 0 16px 20px 20px;
+  overflow: hidden;
+  z-index: 1000;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  color: #FFFFFF;
+  opacity: 0;
+  transition: opacity 0.4s ease-out, transform 0.4s ease-out;
+}
+
+.ongoing-trips-panel.visible {
+  animation: tableFadeIn 0.5s ease-out forwards;
+}
+
+.ongoing-trips-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: transparent;
+  border: none;
+  color: #FFFFFF;
+  cursor: pointer;
+  text-align: left;
+}
+
+.ongoing-trips-title {
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0;
+  letter-spacing: 0.5px;
+}
+
+.ongoing-trips-chevron {
+  width: 20px;
+  height: 20px;
+  opacity: 0.7;
+}
+
+.ongoing-trips-list-wrapper {
+  max-height: 220px;
+  overflow-y: auto;
+  padding-bottom: 4px;
+}
+
+.ongoing-trips-list-wrapper::-webkit-scrollbar {
+  width: 6px;
+}
+
+.ongoing-trips-list-wrapper::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+}
+
+.ongoing-trips-list-wrapper::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+.ongoing-trips-list-wrapper::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.ongoing-trips-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ongoing-trip-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
+  border-left: 3px solid rgba(255, 255, 255, 0.2);
+  color: #FFFFFF;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ongoing-trip-item:hover {
+  background: rgba(0, 0, 0, 0.3);
+  border-left-color: rgba(61, 169, 255, 0.6);
+}
+
+.ongoing-trip-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.ongoing-trip-name {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.ongoing-trip-eta {
+  font-size: 11px;
+  font-weight: 600;
+  color: #6B7280;
+  letter-spacing: 0.3px;
+}
+
+.ongoing-trip-route {
+  font-size: 13px;
+  font-weight: 500;
+  color: #FFFFFF;
+  margin-bottom: 4px;
+}
+
+.ongoing-trip-progress {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.ongoing-trip-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #10B981, #3DA9FF);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
 /* Fleet Table Styles */
 @keyframes tableFadeIn {
   from {
@@ -699,6 +839,25 @@
   border-radius: 12px;
   padding: 12px;
   border: 1px solid transparent;
+  cursor: pointer;
+  transition: opacity 0.2s ease, filter 0.2s ease;
+  text-align: left;
+  width: 100%;
+  font: inherit;
+}
+
+.status-card:hover {
+  filter: brightness(1.1);
+}
+
+.status-card--inactive {
+  opacity: 0.45;
+  filter: saturate(0.5);
+}
+
+.status-card--inactive:hover {
+  opacity: 0.7;
+  filter: saturate(0.7) brightness(1.05);
 }
 
 .status-card-active {

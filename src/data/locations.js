@@ -33,7 +33,7 @@ export const DRONE_MODELS = [
 function createCityDrones(cityId, centerLat, centerLng, droneConfigs) {
   return droneConfigs.map((config) => {
     const name = config.suffix != null ? `${config.model}-${config.suffix}` : config.model
-    return {
+    const drone = {
       id: `${cityId}-${config.id}`,
       status: config.status,
       battery: config.battery,
@@ -47,6 +47,9 @@ function createCityDrones(cityId, centerLat, centerLng, droneConfigs) {
         lng: centerLng + config.offsetLng
       }
     }
+    if (config.tripOrigin) drone.tripOrigin = config.tripOrigin
+    if (config.tripDestination) drone.tripDestination = config.tripDestination
+    return drone
   })
 }
 
@@ -88,7 +91,20 @@ const ABU_DHABI_DRONES = [
   { id: 'DR-007', status: 'delivering', battery: 58, model: 'VertiBus', eta: '10 mins', load: 2, offsetLat: -0.009, offsetLng: 0.022 },
   { id: 'DR-008', status: 'delivering', battery: 72, model: 'Dragonfly', suffix: 1, eta: '7 mins', load: 1, offsetLat: 0.018, offsetLng: -0.008 },
   { id: 'DR-009', status: 'standby', battery: 19, model: 'Peregrine', suffix: 1, offsetLat: -0.012, offsetLng: -0.015 },
-  { id: 'DR-010', status: 'delivering', battery: 24, model: 'Sirocco Pax', suffix: 1, eta: '4 mins', load: 3, offsetLat: 0.006, offsetLng: -0.018 }
+  { id: 'DR-010', status: 'delivering', battery: 24, model: 'Sirocco Pax', suffix: 1, eta: '4 mins', load: 3, offsetLat: 0.006, offsetLng: -0.018 },
+  {
+    id: 'DR-011',
+    status: 'delivering',
+    battery: 100,
+    model: 'Mistral 400',
+    suffix: 1,
+    eta: '6 mins',
+    load: 2,
+    offsetLat: 24.441938 - 24.4539,
+    offsetLng: 54.6478849 - 54.3773,
+    tripOrigin: { lat: 24.441938, lng: 54.6478849, name: 'Abu Dhabi Airport' },
+    tripDestination: { lat: 24.429167, lng: 54.618333, name: 'Masdar City' }
+  }
 ]
 
 const PARIS_DRONES = [
