@@ -18,10 +18,13 @@ function getTableStatus(drone) {
 
 export default function FleetTable({ 
   drones, 
+  allDrones,
   selectedDrone, 
   onDroneSelect, 
   onDroneHover,
   showTable = true,
+  categoryFilter = { active: true, ready: true, lowBat: true },
+  onCategoryToggle,
   criticalBatteryFilter = false,
   onCriticalBatteryFilterChange
 }) {
@@ -39,9 +42,11 @@ export default function FleetTable({
     onDroneHover(null)
   }
 
-  // Categorize and count drones
+  const dronesForCounts = allDrones ?? drones
+
+  // Categorize and count drones (use full fleet for counts)
   const counts = useMemo(() => {
-    return drones.reduce((acc, drone) => {
+    return dronesForCounts.reduce((acc, drone) => {
       if (drone.battery < 25) {
         acc.lowBat++
       } else if (drone.status === 'delivering') {
@@ -51,7 +56,7 @@ export default function FleetTable({
       }
       return acc
     }, { active: 0, ready: 0, lowBat: 0 })
-  }, [drones])
+  }, [dronesForCounts])
 
   // Sort: Active first, then Low Bat, then Ready
   const sortedDrones = useMemo(() => {
@@ -91,9 +96,15 @@ export default function FleetTable({
         )}
       </button>
 
-      {/* Status Cards */}
+      {/* Status Cards - clickable filters */}
       <div className="fleet-status-cards">
-        <div className="status-card status-card-active">
+        <button
+          type="button"
+          className={`status-card status-card-active ${!categoryFilter.active ? 'status-card--inactive' : ''}`}
+          onClick={() => onCategoryToggle?.('active')}
+          aria-pressed={categoryFilter.active}
+          title={categoryFilter.active ? 'Hide ACTIVE drones' : 'Show ACTIVE drones'}
+        >
           <div className="status-card-header">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
               <path d="M22 2L11 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -104,9 +115,15 @@ export default function FleetTable({
           <div className="status-card-count">
             {String(counts.active).padStart(2, '0')}
           </div>
-        </div>
+        </button>
 
-        <div className="status-card status-card-ready">
+        <button
+          type="button"
+          className={`status-card status-card-ready ${!categoryFilter.ready ? 'status-card--inactive' : ''}`}
+          onClick={() => onCategoryToggle?.('ready')}
+          aria-pressed={categoryFilter.ready}
+          title={categoryFilter.ready ? 'Hide READY drones' : 'Show READY drones'}
+        >
           <div className="status-card-header">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
               <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -117,9 +134,15 @@ export default function FleetTable({
           <div className="status-card-count">
             {String(counts.ready).padStart(2, '0')}
           </div>
-        </div>
+        </button>
 
-        <div className="status-card status-card-lowbat">
+        <button
+          type="button"
+          className={`status-card status-card-lowbat ${!categoryFilter.lowBat ? 'status-card--inactive' : ''}`}
+          onClick={() => onCategoryToggle?.('lowBat')}
+          aria-pressed={categoryFilter.lowBat}
+          title={categoryFilter.lowBat ? 'Hide LOW BAT drones' : 'Show LOW BAT drones'}
+        >
           <div className="status-card-header">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
               <rect x="2" y="7" width="16" height="10" rx="2" stroke="currentColor" strokeWidth="2"/>
@@ -131,7 +154,7 @@ export default function FleetTable({
           <div className="status-card-count">
             {String(counts.lowBat).padStart(2, '0')}
           </div>
-        </div>
+        </button>
       </div>
 
       {/* Table */}

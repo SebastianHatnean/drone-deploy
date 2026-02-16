@@ -18,9 +18,9 @@ export default function AppMenu({
   cities = [],
   activeCityId,
   onCityChange,
+  onResetBatteries,
   criticalBatteryFilter,
   onCriticalBatteryFilterChange,
-  onResetBatteries,
 }) {
   return (
     <Menubar className="app-menubar">

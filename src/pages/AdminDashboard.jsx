@@ -5,7 +5,9 @@ import AppMenu from '../components/AppMenu'
 import DroneMap from '../components/DroneMap'
 import DroneCard from '../components/DroneCard'
 import FleetTable from '../components/FleetTable'
+import OngoingTripsPanel from '../components/OngoingTripsPanel'
 import { useFleetDashboard } from '../hooks/useFleetDashboard'
+import { useTripProgress } from '../hooks/useTripProgress'
 import { DRONE_IMAGE_MAP } from '../utils/droneImages'
 
 /**
@@ -27,6 +29,8 @@ export default function AdminDashboard() {
     selectedDrone,
     hoveredDrone,
     setHoveredDrone,
+    categoryFilter,
+    toggleCategory,
     criticalBatteryFilter,
     setCriticalBatteryFilter,
     mapAnimationComplete,
@@ -35,6 +39,19 @@ export default function AdminDashboard() {
     handleDroneDeselect,
     handleTableHover
   } = useFleetDashboard({ cities, mapRef })
+
+  const deliveringDrones = drones.filter((d) => d.status === 'delivering')
+  const { progressMap, getDronePosition, getDroneBearing } = useTripProgress(deliveringDrones)
+
+  const handleFocusDrone = (droneId) => {
+    const drone = drones.find((d) => d.id === droneId)
+    if (!drone) return
+    const center =
+      drone.status === 'delivering' && drone.tripRoute
+        ? getDronePosition(drone)
+        : drone.coordinates
+    handleDroneSelect(droneId, center)
+  }
 
   useEffect(() => {
     const uniqueImages = [...new Set(Object.values(DRONE_IMAGE_MAP))]
@@ -53,15 +70,18 @@ export default function AdminDashboard() {
           cities={cities}
           activeCityId={activeCityId}
           onCityChange={setActiveCityId}
+          onResetBatteries={resetBatteries}
           criticalBatteryFilter={criticalBatteryFilter}
           onCriticalBatteryFilterChange={setCriticalBatteryFilter}
-          onResetBatteries={resetBatteries}
         />
       </header>
 
       <DroneMap
         ref={mapRef}
         drones={displayedDrones}
+        deliveringDronesWithTrips={deliveringDrones}
+        getDronePosition={getDronePosition}
+        getDroneBearing={getDroneBearing}
         viewState={viewState}
         onMove={setViewState}
         onLoad={handleMapLoad}
@@ -72,12 +92,22 @@ export default function AdminDashboard() {
         mapStyle={MAP_STYLE}
       />
 
+      <OngoingTripsPanel
+        deliveringDrones={deliveringDrones}
+        progressMap={progressMap}
+        onFocusDrone={handleFocusDrone}
+        showPanel={mapAnimationComplete}
+      />
+
       <FleetTable
         drones={displayedDrones}
+        allDrones={drones}
         selectedDrone={selectedDrone}
         onDroneSelect={handleDroneSelect}
         onDroneHover={handleTableHover}
         showTable={mapAnimationComplete}
+        categoryFilter={categoryFilter}
+        onCategoryToggle={toggleCategory}
         criticalBatteryFilter={criticalBatteryFilter}
         onCriticalBatteryFilterChange={setCriticalBatteryFilter}
       />
