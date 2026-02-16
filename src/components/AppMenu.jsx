@@ -20,6 +20,7 @@ export default function AppMenu({
   onCityChange,
   criticalBatteryFilter,
   onCriticalBatteryFilterChange,
+  onResetBatteries,
 }) {
   return (
     <Menubar className="app-menubar">
@@ -33,13 +34,8 @@ export default function AppMenu({
             Refresh
           </MenubarItem>
           <MenubarSeparator />
-          <MenubarItem
-            onClick={() => {
-              const data = { refreshedAt: new Date().toISOString() }
-              navigator.clipboard?.writeText(JSON.stringify(data))
-            }}
-          >
-            Copy status
+          <MenubarItem onClick={() => onResetBatteries?.()}>
+            Reset batteries
           </MenubarItem>
         </MenubarContent>
       </MenubarMenu>
@@ -90,7 +86,8 @@ export default function AppMenu({
         <MenubarContent>
           <MenubarItem asChild>
             <NavLink
-              to="/admin"
+              to="/"
+              end
               className={({ isActive }) =>
                 cn('block w-full', isActive && 'menubar-item-active')
               }
@@ -100,8 +97,7 @@ export default function AppMenu({
           </MenubarItem>
           <MenubarItem asChild>
             <NavLink
-              to="/"
-              end
+              to="/user"
               className={({ isActive }) =>
                 cn('block w-full', isActive && 'menubar-item-active')
               }

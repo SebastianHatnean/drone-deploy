@@ -5,15 +5,16 @@ import UserDashboard from './pages/UserDashboard'
 
 /**
  * App - Root component with routing.
- * /admin - Admin dashboard (full fleet management)
- * / - User dashboard (non-admin view)
+ * / - Admin dashboard (default, full fleet management)
+ * /user - User dashboard (non-admin view)
  */
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/admin" element={<AdminDashboard />} />
-        <Route path="/" element={<UserDashboard />} />
+        <Route path="/" element={<AdminDashboard />} />
+        <Route path="/user" element={<UserDashboard />} />
+        <Route path="/admin" element={<Navigate to="/" replace />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

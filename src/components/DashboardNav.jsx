@@ -9,7 +9,8 @@ export default function DashboardNav() {
   return (
     <nav className="dashboard-nav">
       <NavLink
-        to="/admin"
+        to="/"
+        end
         className={({ isActive }) =>
           cn('dashboard-nav-link', isActive && 'dashboard-nav-link-active')
         }
@@ -17,8 +18,7 @@ export default function DashboardNav() {
         Admin
       </NavLink>
       <NavLink
-        to="/"
-        end
+        to="/user"
         className={({ isActive }) =>
           cn('dashboard-nav-link', isActive && 'dashboard-nav-link-active')
         }

@@ -18,6 +18,7 @@ export default function AdminDashboard() {
   const {
     activeCityId,
     setActiveCityId,
+    resetBatteries,
     drones,
     displayedDrones,
     updateDroneBattery,
@@ -54,6 +55,7 @@ export default function AdminDashboard() {
           onCityChange={setActiveCityId}
           criticalBatteryFilter={criticalBatteryFilter}
           onCriticalBatteryFilterChange={setCriticalBatteryFilter}
+          onResetBatteries={resetBatteries}
         />
       </header>
 

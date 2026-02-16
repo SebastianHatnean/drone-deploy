@@ -29,3 +29,15 @@ export function saveBatteryLevel(droneId, battery) {
     // Ignore quota exceeded or other storage errors
   }
 }
+
+/**
+ * Clear all battery overrides from localStorage.
+ * Drones will revert to their default values from the data source.
+ */
+export function resetBatteryLevels() {
+  try {
+    localStorage.removeItem(STORAGE_KEY)
+  } catch {
+    // Ignore storage errors
+  }
+}

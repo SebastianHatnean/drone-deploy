@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { getCityById } from '../data/locations'
-import { loadBatteryLevels, saveBatteryLevel } from '../utils/batteryStorage'
+import { loadBatteryLevels, saveBatteryLevel, resetBatteryLevels } from '../utils/batteryStorage'
 import {
   ZOOM_INCREMENT,
   DEFAULT_ZOOM,
@@ -153,6 +153,12 @@ export function useFleetDashboard({ cities, mapRef }) {
     saveBatteryLevel(droneId, battery)
   }
 
+  /** Reset all batteries to default values (clears localStorage overrides) */
+  const resetBatteries = () => {
+    setBatteryOverrides({})
+    resetBatteryLevels()
+  }
+
   return {
     activeCityId,
     setActiveCityId,
@@ -171,6 +177,7 @@ export function useFleetDashboard({ cities, mapRef }) {
     handleDroneSelect,
     handleDroneDeselect,
     handleTableHover,
-    updateDroneBattery
+    updateDroneBattery,
+    resetBatteries
   }
 }
