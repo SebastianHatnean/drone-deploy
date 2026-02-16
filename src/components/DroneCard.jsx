@@ -1,4 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
+import Draggable from 'react-draggable'
+import { GripVertical } from 'lucide-react'
 import { getStatusDisplay, getDroneCapacity, getDroneDescription, generateMockHistory } from '../utils/droneHelpers'
 import { getDroneImage } from '../utils/droneImages'
 import ChargingState from './ChargingState'
@@ -15,6 +17,7 @@ import {
 function DroneCard({ drone, onClose, onBatteryUpdate }) {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [chargeView, setChargeView] = useState('confirm') // 'confirm' | 'charging'
+  const nodeRef = useRef(null)
 
   const handleOpenChange = (open) => {
     setIsDialogOpen(open)
@@ -45,12 +48,23 @@ function DroneCard({ drone, onClose, onBatteryUpdate }) {
   // #endregion
 
   return (
-    <div className="drone-card">
-      {/* Header with status badge and close button */}
+    <Draggable
+      nodeRef={nodeRef}
+      handle=".drone-card-drag-handle"
+      cancel="button, [role='dialog']"
+      defaultPosition={{ x: 0, y: 0 }}
+      bounds={false}
+      position={undefined}
+    >
+      <div ref={nodeRef} className="drone-card">
+      {/* Header with drag handle, status badge and close button */}
       <div className="drone-card-header">
-        <div className="drone-card-status" style={{ '--status-color': statusInfo.color }}>
-          <span className="status-dot"></span>
-          <span className="status-text">{statusInfo.text}</span>
+        <div className="drone-card-drag-handle modal-drag-handle" aria-label="Drag to move">
+          <GripVertical size={18} />
+          <div className="drone-card-status" style={{ '--status-color': statusInfo.color }}>
+            <span className="status-dot"></span>
+            <span className="status-text">{statusInfo.text}</span>
+          </div>
         </div>
         <button 
           className="drone-card-close" 
@@ -179,7 +193,8 @@ function DroneCard({ drone, onClose, onBatteryUpdate }) {
           <ChargingState drone={drone} onBatteryComplete={onBatteryUpdate} />
         )}
       </Dialog>
-    </div>
+      </div>
+    </Draggable>
   )
 }
 

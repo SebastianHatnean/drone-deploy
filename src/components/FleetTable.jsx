@@ -1,4 +1,6 @@
 import { useState, useMemo, useRef } from 'react'
+import Draggable from 'react-draggable'
+import { GripVertical } from 'lucide-react'
 import { getMarkerColor } from '../utils/droneHelpers'
 
 /**
@@ -30,6 +32,7 @@ export default function FleetTable({
 }) {
   const [isExpanded, setIsExpanded] = useState(false)
   const hoverTimeoutRef = useRef(null)
+  const nodeRef = useRef(null)
 
   const handleMouseEnter = (droneId) => {
     hoverTimeoutRef.current = setTimeout(() => {
@@ -74,9 +77,19 @@ export default function FleetTable({
   const visibleDrones = sortedDrones
 
   return (
-    <div className={`fleet-table ${showTable ? 'visible' : ''} ${criticalBatteryFilter ? 'critical-battery-mode' : ''}`}>
-      {/* Header */}
-      <h2 className="fleet-table-title">FLEET OVERVIEW</h2>
+    <Draggable
+      nodeRef={nodeRef}
+      handle=".fleet-table-drag-handle"
+      cancel="button, input, a, [role='button']"
+      defaultPosition={{ x: 0, y: 0 }}
+      bounds={false}
+      position={undefined}
+    >
+      <div ref={nodeRef} className={`fleet-table ${showTable ? 'visible' : ''} ${criticalBatteryFilter ? 'critical-battery-mode' : ''}`}>
+        <div className="fleet-table-drag-handle modal-drag-handle" aria-label="Drag to move">
+          <GripVertical size={18} />
+          <h2 className="fleet-table-title">FLEET OVERVIEW</h2>
+        </div>
 
       {/* Critical Battery Filter Toggle */}
       <button
@@ -228,6 +241,7 @@ export default function FleetTable({
           <path d="M6 9L12 15L18 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
       </button>
-    </div>
+      </div>
+    </Draggable>
   )
 }
