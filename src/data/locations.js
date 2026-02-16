@@ -67,7 +67,7 @@ const LONDON_DRONES = [
   { id: 'DR-010', status: 'standby', battery: 58, model: 'Peregrine', suffix: 1, offsetLat: -0.0099, offsetLng: -0.0081 },
   { id: 'DR-011', status: 'standby', battery: 90, model: 'Sirocco Pax', suffix: 1, offsetLat: 0.0151, offsetLng: -0.0285 },
   { id: 'DR-012', status: 'standby', battery: 73, model: 'Zephyr T-Line', suffix: 1, offsetLat: 0.0275, offsetLng: 0.0031 },
-  { id: 'DR-013', status: 'standby', battery: 86, model: 'Mistral 400', suffix: 1, offsetLat: 0.0060, offsetLng: 0.1571 },
+  { id: 'DR-013', status: 'standby', battery: 86, model: 'Mistral 400', suffix: 1, offsetLat: 0.0375, offsetLng: 0.0031  },
   { id: 'DR-014', status: 'standby', battery: 78, model: 'Sky-Shuttle', suffix: 1, offsetLat: -0.0181, offsetLng: -0.0165 },
   { id: 'DR-015', status: 'delivering', battery: 62, model: 'VertiBus', suffix: 1, eta: '8 mins', load: 2, offsetLat: 0.0071, offsetLng: 0.0269 },
   { id: 'DR-016', status: 'delivering', battery: 71, model: 'Dragonfly', suffix: 4, eta: '12 mins', load: 3, offsetLat: 0.0247, offsetLng: -0.0113 },

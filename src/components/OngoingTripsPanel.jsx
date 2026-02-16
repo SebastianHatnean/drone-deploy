@@ -1,5 +1,6 @@
-import { useState } from 'react'
-import { ChevronDown, ChevronUp } from 'lucide-react'
+import { useState, useRef } from 'react'
+import Draggable from 'react-draggable'
+import { ChevronDown, ChevronUp, GripVertical } from 'lucide-react'
 
 /**
  * OngoingTripsPanel - Collapsible panel listing delivering drones with route info and progress.
@@ -11,23 +12,38 @@ export default function OngoingTripsPanel({
   showPanel = true
 }) {
   const [isExpanded, setIsExpanded] = useState(true)
+  const nodeRef = useRef(null)
 
   if (deliveringDrones.length === 0) return null
 
   return (
-    <div className={`ongoing-trips-panel ${showPanel ? 'visible' : ''}`}>
-      <button
-        type="button"
-        className="ongoing-trips-toggle"
-        onClick={() => setIsExpanded((e) => !e)}
-      >
-        <h2 className="ongoing-trips-title">ONGOING TRIPS</h2>
-        {isExpanded ? (
-          <ChevronUp className="ongoing-trips-chevron" />
-        ) : (
-          <ChevronDown className="ongoing-trips-chevron" />
-        )}
-      </button>
+    <Draggable
+      nodeRef={nodeRef}
+      handle=".ongoing-trips-drag-handle"
+      cancel="button"
+      defaultPosition={{ x: 0, y: 0 }}
+      bounds={false}
+      position={undefined}
+    >
+      <div ref={nodeRef} className={`ongoing-trips-panel ${showPanel ? 'visible' : ''}`}>
+        <div className="ongoing-trips-header">
+          <div className="ongoing-trips-drag-handle modal-drag-handle" aria-label="Drag to move">
+            <GripVertical size={18} />
+            <h2 className="ongoing-trips-title">ONGOING TRIPS</h2>
+          </div>
+          <button
+            type="button"
+            className="ongoing-trips-toggle"
+            onClick={() => setIsExpanded((e) => !e)}
+            aria-expanded={isExpanded}
+          >
+            {isExpanded ? (
+              <ChevronUp className="ongoing-trips-chevron" />
+            ) : (
+              <ChevronDown className="ongoing-trips-chevron" />
+            )}
+          </button>
+        </div>
 
       {isExpanded && (
         <div className="ongoing-trips-list-wrapper">
@@ -65,6 +81,7 @@ export default function OngoingTripsPanel({
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </Draggable>
   )
 }
