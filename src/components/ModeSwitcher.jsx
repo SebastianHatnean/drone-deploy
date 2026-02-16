@@ -2,17 +2,17 @@ import { NavLink } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 
 /**
- * DashboardNav - Route switcher for Admin and User dashboards.
- * Shows active state for the current route.
+ * ModeSwitcher - Admin / Driver / User radio-style switch in the top menu bar.
+ * Always visible on the right side of the header.
  */
-export default function DashboardNav() {
+export default function ModeSwitcher() {
   return (
-    <nav className="dashboard-nav">
+    <nav className="mode-switcher" aria-label="View mode">
       <NavLink
         to="/"
         end
         className={({ isActive }) =>
-          cn('dashboard-nav-link', isActive && 'dashboard-nav-link-active')
+          cn('mode-switcher-option', isActive && 'mode-switcher-option-active')
         }
       >
         Admin
@@ -20,7 +20,7 @@ export default function DashboardNav() {
       <NavLink
         to="/driver"
         className={({ isActive }) =>
-          cn('dashboard-nav-link', isActive && 'dashboard-nav-link-active')
+          cn('mode-switcher-option', isActive && 'mode-switcher-option-active')
         }
       >
         Driver
@@ -28,7 +28,7 @@ export default function DashboardNav() {
       <NavLink
         to="/user"
         className={({ isActive }) =>
-          cn('dashboard-nav-link', isActive && 'dashboard-nav-link-active')
+          cn('mode-switcher-option', isActive && 'mode-switcher-option-active')
         }
       >
         User

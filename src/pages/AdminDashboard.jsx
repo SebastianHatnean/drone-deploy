@@ -2,6 +2,7 @@ import { useRef, useEffect } from 'react'
 import { cities } from '../data/locations'
 import { MAP_STYLE } from '../constants'
 import AppMenu from '../components/AppMenu'
+import ModeSwitcher from '../components/ModeSwitcher'
 import DroneMap from '../components/DroneMap'
 import DroneCard from '../components/DroneCard'
 import FleetTable from '../components/FleetTable'
@@ -74,6 +75,7 @@ export default function AdminDashboard() {
           criticalBatteryFilter={criticalBatteryFilter}
           onCriticalBatteryFilterChange={setCriticalBatteryFilter}
         />
+        <ModeSwitcher />
       </header>
 
       <DroneMap

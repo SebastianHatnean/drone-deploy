@@ -1,3 +1,17 @@
+// Popular destinations in Abu Dhabi for driver rides
+export const ABU_DHABI_DESTINATIONS = [
+  { lat: 24.441938, lng: 54.6478849, name: 'Abu Dhabi Airport' },
+  { lat: 24.429167, lng: 54.618333, name: 'Masdar City' },
+  { lat: 24.4539, lng: 54.3773, name: 'Corniche Beach' },
+  { lat: 24.4167, lng: 54.4333, name: 'Yas Island' },
+  { lat: 24.4922, lng: 54.3572, name: 'Sheikh Zayed Mosque' },
+  { lat: 24.4821, lng: 54.3548, name: 'Louvre Abu Dhabi' },
+  { lat: 24.4677, lng: 54.3213, name: 'Saadiyat Island' },
+  { lat: 24.4945, lng: 54.3808, name: 'Al Maryah Island' },
+  { lat: 24.4264, lng: 54.4337, name: 'Ferrari World' },
+  { lat: 24.4686, lng: 54.6075, name: 'Al Ain City' }
+]
+
 /**
  * Calculate drone range based on battery level
  * @param {number} battery - Battery percentage (0-100)
@@ -100,10 +114,11 @@ const ABU_DHABI_DRONES = [
     suffix: 1,
     eta: '6 mins',
     load: 2,
-    offsetLat: 24.441938 - 24.4539,
-    offsetLng: 54.6478849 - 54.3773,
-    tripOrigin: { lat: 24.441938, lng: 54.6478849, name: 'Abu Dhabi Airport' },
-    tripDestination: { lat: 24.429167, lng: 54.618333, name: 'Masdar City' }
+    offsetLat: 0,
+    offsetLng: 0,
+    // Trip origin and destination will be set dynamically in DriverMapPage
+    tripOrigin: null,
+    tripDestination: null
   }
 ]
 
@@ -145,6 +160,30 @@ const PARIS = {
 }
 
 export const cities = [LONDON, ABU_DHABI, PARIS]
+
+/**
+ * Generate a random ride route from Abu Dhabi destinations
+ * @returns {{ origin: Object, destination: Object, eta: string, passengers: number }}
+ */
+export function generateRandomRide() {
+  const shuffled = [...ABU_DHABI_DESTINATIONS].sort(() => Math.random() - 0.5)
+  const origin = shuffled[0]
+  const destination = shuffled[1]
+  
+  // Calculate approximate distance for ETA
+  const dLat = destination.lat - origin.lat
+  const dLng = destination.lng - origin.lng
+  const distance = Math.sqrt(dLat * dLat + dLng * dLng) * 111 // Rough km conversion
+  
+  // ETA: ~1 min per 2 km
+  const minutes = Math.max(3, Math.min(15, Math.round(distance / 2)))
+  const eta = `${minutes} mins`
+  
+  // Random passengers (1-4)
+  const passengers = Math.floor(Math.random() * 4) + 1
+  
+  return { origin, destination, eta, passengers }
+}
 
 export function getCityById(id) {
   return cities.find(c => c.id === id) ?? cities[0]

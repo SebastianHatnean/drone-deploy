@@ -1,7 +1,32 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
-const PROGRESS_INCREMENT = 0.05
-const TICK_MS = 2500
+const TICK_MS = 500 // Update every 500ms for smooth animation
+
+/**
+ * Calculate distance between two points in kilometers
+ * @param {Object} point1 - {lat, lng}
+ * @param {Object} point2 - {lat, lng}
+ * @returns {number} Distance in kilometers
+ */
+function calculateDistance(point1, point2) {
+  const dLat = point2.lat - point1.lat
+  const dLng = point2.lng - point1.lng
+  // Rough approximation: 1 degree ≈ 111 km
+  return Math.sqrt(dLat * dLat + dLng * dLng) * 111
+}
+
+/**
+ * Calculate progress increment based on distance (1km = 1 second)
+ * @param {Object} origin - {lat, lng}
+ * @param {Object} destination - {lat, lng}
+ * @returns {number} Progress increment per tick
+ */
+function calculateProgressIncrement(origin, destination) {
+  const distance = calculateDistance(origin, destination)
+  const durationSeconds = Math.max(3, distance) // Minimum 3 seconds
+  const ticksNeeded = (durationSeconds * 1000) / TICK_MS
+  return 1 / ticksNeeded
+}
 
 /**
  * Interpolate position along a route based on progress (0-1).
@@ -35,17 +60,39 @@ function interpolatePosition(route, progress) {
 /**
  * Hook to animate trip progress for delivering drones.
  * @param {Array} deliveringDrones - Drones with tripOrigin, tripDestination, tripRoute
+ * @param {Object} [options] - Optional config
+ * @param {(drone: Object) => void} [options.onRideComplete] - Called when a drone's progress reaches 100%
  * @returns {{ progressMap: Record<string, number>, getDronePosition: (drone) => { lat, lng }, getDroneBearing: (drone) => number }}
  */
-export function useTripProgress(deliveringDrones) {
+export function useTripProgress(deliveringDrones, options = {}) {
+  const { onRideComplete } = options
   const [progressMap, setProgressMap] = useState({})
+  const onRideCompleteRef = useRef(onRideComplete)
+  const completedDronesRef = useRef(new Set()) // Track which drones have had completion callback invoked
+  const progressIncrementsRef = useRef({}) // Store progress increment for each drone
+  onRideCompleteRef.current = onRideComplete
 
   useEffect(() => {
     const ids = deliveringDrones.map((d) => d.id)
     setProgressMap((prev) => {
       const next = { ...prev }
       ids.forEach((id) => {
-        if (next[id] == null) next[id] = 0
+        if (next[id] == null) {
+          next[id] = 0
+          // Reset completion tracking when a new ride starts
+          completedDronesRef.current.delete(id)
+          
+          // Calculate progress increment for this drone based on distance
+          const drone = deliveringDrones.find(d => d.id === id)
+          if (drone?.tripOrigin && drone?.tripDestination) {
+            progressIncrementsRef.current[id] = calculateProgressIncrement(
+              drone.tripOrigin,
+              drone.tripDestination
+            )
+          } else {
+            progressIncrementsRef.current[id] = 0.05 // Fallback
+          }
+        }
       })
       return next
     })
@@ -57,12 +104,45 @@ export function useTripProgress(deliveringDrones) {
     const interval = setInterval(() => {
       setProgressMap((prev) => {
         const next = { ...prev }
+        const newlyCompleted = []
+        
         deliveringDrones.forEach((drone) => {
           const current = next[drone.id] ?? 0
-          let nextVal = current + PROGRESS_INCREMENT
-          if (nextVal >= 1) nextVal = 0
-          next[drone.id] = nextVal
+          
+          // If already completed (callback already invoked), keep at 100%
+          if (completedDronesRef.current.has(drone.id)) {
+            next[drone.id] = 1
+            return
+          }
+          
+          // If already at 100% but not yet marked as completed, mark it now
+          if (current >= 1) {
+            next[drone.id] = 1
+            completedDronesRef.current.add(drone.id)
+            newlyCompleted.push(drone)
+            return
+          }
+          
+          // Get the progress increment for this specific drone
+          const increment = progressIncrementsRef.current[drone.id] ?? 0.05
+          const nextVal = current + increment
+          
+          if (nextVal >= 1) {
+            next[drone.id] = 1
+            completedDronesRef.current.add(drone.id)
+            newlyCompleted.push(drone)
+          } else {
+            next[drone.id] = nextVal
+          }
         })
+        
+        // Call completion callbacks synchronously after state update
+        if (newlyCompleted.length > 0) {
+          newlyCompleted.forEach((drone) => {
+            onRideCompleteRef.current?.(drone)
+          })
+        }
+        
         return next
       })
     }, TICK_MS)

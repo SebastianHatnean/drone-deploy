@@ -97,6 +97,16 @@ export default function AppMenu({
           </MenubarItem>
           <MenubarItem asChild>
             <NavLink
+              to="/driver"
+              className={({ isActive }) =>
+                cn('block w-full', isActive && 'menubar-item-active')
+              }
+            >
+              Driver
+            </NavLink>
+          </MenubarItem>
+          <MenubarItem asChild>
+            <NavLink
               to="/user"
               className={({ isActive }) =>
                 cn('block w-full', isActive && 'menubar-item-active')

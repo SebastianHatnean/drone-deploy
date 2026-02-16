@@ -1,4 +1,5 @@
 import DashboardNav from '../components/DashboardNav'
+import ModeSwitcher from '../components/ModeSwitcher'
 
 /**
  * UserDashboard - View for non-admin users.
@@ -9,6 +10,7 @@ export default function UserDashboard() {
     <>
       <header className="app-header app-header-user">
         <DashboardNav />
+        <ModeSwitcher />
       </header>
       <div className="user-dashboard">
         <h1>User Dashboard</h1>
