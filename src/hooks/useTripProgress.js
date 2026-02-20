@@ -21,9 +21,32 @@ function calculateDistance(point1, point2) {
  * @param {Object} destination - {lat, lng}
  * @returns {number} Progress increment per tick
  */
-function calculateProgressIncrement(origin, destination) {
+function calculateProgressIncrementFromDistance(origin, destination) {
   const distance = calculateDistance(origin, destination)
   const durationSeconds = Math.max(3, distance) // Minimum 3 seconds
+  const ticksNeeded = (durationSeconds * 1000) / TICK_MS
+  return 1 / ticksNeeded
+}
+
+/**
+ * Seeded random for deterministic but varied values per drone
+ * @param {number} seed
+ * @returns {number} 0-1
+ */
+function seededRandom(seed) {
+  const x = Math.sin(seed) * 10000
+  return x - Math.floor(x)
+}
+
+/**
+ * Calculate progress increment for random duration (20-30 seconds) per drone.
+ * Uses drone id as seed so each drone gets a different duration.
+ * @param {string} droneId - Drone ID for deterministic variation
+ * @returns {number} Progress increment per tick
+ */
+function calculateProgressIncrementRandom(droneId) {
+  const seed = (droneId || '').split('').reduce((acc, c) => acc + c.charCodeAt(0), 0)
+  const durationSeconds = 20 + seededRandom(seed) * 20 // 20-40 seconds, different per drone
   const ticksNeeded = (durationSeconds * 1000) / TICK_MS
   return 1 / ticksNeeded
 }
@@ -62,10 +85,11 @@ function interpolatePosition(route, progress) {
  * @param {Array} deliveringDrones - Drones with tripOrigin, tripDestination, tripRoute
  * @param {Object} [options] - Optional config
  * @param {(drone: Object) => void} [options.onRideComplete] - Called when a drone's progress reaches 100%
+ * @param {'distance'|'random'} [options.durationMode='distance'] - 'distance' = 1km=1s, 'random' = 20-30s per ride
  * @returns {{ progressMap: Record<string, number>, getDronePosition: (drone) => { lat, lng }, getDroneBearing: (drone) => number }}
  */
 export function useTripProgress(deliveringDrones, options = {}) {
-  const { onRideComplete } = options
+  const { onRideComplete, durationMode = 'distance' } = options
   const [progressMap, setProgressMap] = useState({})
   const onRideCompleteRef = useRef(onRideComplete)
   const completedDronesRef = useRef(new Set()) // Track which drones have had completion callback invoked
@@ -77,26 +101,25 @@ export function useTripProgress(deliveringDrones, options = {}) {
     setProgressMap((prev) => {
       const next = { ...prev }
       ids.forEach((id) => {
-        if (next[id] == null) {
-          next[id] = 0
-          // Reset completion tracking when a new ride starts
-          completedDronesRef.current.delete(id)
-          
-          // Calculate progress increment for this drone based on distance
-          const drone = deliveringDrones.find(d => d.id === id)
-          if (drone?.tripOrigin && drone?.tripDestination) {
-            progressIncrementsRef.current[id] = calculateProgressIncrement(
-              drone.tripOrigin,
-              drone.tripDestination
-            )
-          } else {
-            progressIncrementsRef.current[id] = 0.05 // Fallback
-          }
+        // Always reset when a drone appears in deliveringDrones - same drone can have multiple rides
+        next[id] = 0
+        completedDronesRef.current.delete(id)
+        
+        const drone = deliveringDrones.find(d => d.id === id)
+        if (durationMode === 'random') {
+          progressIncrementsRef.current[id] = calculateProgressIncrementRandom(id)
+        } else if (drone?.tripOrigin && drone?.tripDestination) {
+          progressIncrementsRef.current[id] = calculateProgressIncrementFromDistance(
+            drone.tripOrigin,
+            drone.tripDestination
+          )
+        } else {
+          progressIncrementsRef.current[id] = 0.05 // Fallback
         }
       })
       return next
     })
-  }, [deliveringDrones.map((d) => d.id).join(',')])
+  }, [deliveringDrones.map((d) => d.id).join(','), durationMode])
 
   useEffect(() => {
     if (deliveringDrones.length === 0) return

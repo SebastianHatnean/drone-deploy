@@ -71,12 +71,20 @@ export default function DriverMapPage() {
   const [rideResponse, setRideResponse] = useState(null) // null | 'accepted' | 'rejected'
   const [lastCompletedRide, setLastCompletedRide] = useState(null)
   const [waitingForNextRide, setWaitingForNextRide] = useState(false) // Delay after completion
-  const rideCardNodeRef = useRef(null)
+  const [lowBatteryModalOpen, setLowBatteryModalOpen] = useState(false)
+  const lowBatteryModalShownForRideRef = useRef(null) // Track which ride we've shown modal for
+  const statusCardNodeRef = useRef(null)
+
+  const batteryTooLow = droneBattery <= 0
 
   // Only show ride on map after driver accepts
   const driverDrone = rideResponse === 'accepted' ? rideOfferData : null
 
   const deliveringDrones = driverDrone?.status === 'delivering' ? [driverDrone] : []
+
+  // Status for the persistent status card
+  const driverStatus = driverDrone ? 'driving' : isCharging ? 'charging' : 'waiting'
+  const waitingLabel = waitingForNextRide ? 'Preparing next ride' : notificationVisible ? 'Ride request pending' : 'Waiting for rides'
 
   const handleRideComplete = useCallback((drone) => {
     // Drain battery based on ride distance
@@ -121,9 +129,28 @@ export default function DriverMapPage() {
     return () => clearTimeout(timer)
   }, [rideOfferData, rideResponse, waitingForNextRide])
 
+  // Show low battery modal only once per ride request when battery is 0%
+  useEffect(() => {
+    if (!notificationVisible || !rideOfferData || !batteryTooLow) {
+      if (!notificationVisible) lowBatteryModalShownForRideRef.current = null
+      if (!batteryTooLow) setLowBatteryModalOpen(false)
+      return
+    }
+    const rideKey = `${rideOfferData.tripOrigin?.name}-${rideOfferData.tripDestination?.name}`
+    if (lowBatteryModalShownForRideRef.current === rideKey) return
+    lowBatteryModalShownForRideRef.current = rideKey
+    setLowBatteryModalOpen(true)
+  }, [notificationVisible, rideOfferData?.tripOrigin?.name, rideOfferData?.tripDestination?.name, batteryTooLow])
+
   const handleAccept = () => {
+    if (batteryTooLow) return
     setRideResponse('accepted')
     setNotificationVisible(false)
+  }
+
+  const handleChargeFromModal = () => {
+    setLowBatteryModalOpen(false)
+    handleStartCharging()
   }
 
   const handleReject = () => {
@@ -269,94 +296,95 @@ export default function DriverMapPage() {
         mapStyle={MAP_STYLE}
       />
 
-      {mapAnimationComplete && driverDrone && driverDrone.status === 'delivering' && (
-        <Draggable
-          nodeRef={rideCardNodeRef}
-          handle=".driver-ride-card-drag-handle"
-          cancel="button, input, a, [role='button']"
-          defaultPosition={{ x: 0, y: 0 }}
-          bounds={false}
-          position={undefined}
-        >
-          <div ref={rideCardNodeRef} className="driver-ride-card">
-            <div className="driver-ride-card-drag-handle modal-drag-handle" aria-label="Drag to move">
-              <GripVertical size={18} />
-              <h2 className="driver-ride-card-title">ACTIVE RIDE</h2>
-            </div>
-            <div className="driver-ride-card-content">
-              <div className="driver-ride-panel-section">
-                <h3 className="driver-ride-panel-title">
-                  <MapPin size={16} />
-                  Ride details
-                </h3>
-                <div className="driver-ride-route">
-                  <span className="driver-ride-origin">{driverDrone.tripOrigin?.name ?? 'Origin'}</span>
-                  <span className="driver-ride-arrow">→</span>
-                  <span className="driver-ride-dest">{driverDrone.tripDestination?.name ?? 'Destination'}</span>
-                </div>
-                <div className="driver-ride-panel-row">
-                  <span className="driver-ride-panel-label">Remaining time</span>
-                  <span className="driver-ride-panel-value">{driverDrone.eta ?? '—'}</span>
-                </div>
-                <div className="driver-ride-panel-row">
-                  <span className="driver-ride-panel-label">Progress</span>
-                  <span className="driver-ride-panel-value">
-                    {Math.round((progressMap[driverDrone.id] ?? 0) * 100)}% to destination
-                  </span>
-                </div>
+      {/* Always-visible draggable drone status card */}
+      <Draggable
+        nodeRef={statusCardNodeRef}
+        handle=".driver-status-card-drag-handle"
+        cancel="button, input, a, [role='button']"
+        defaultPosition={{ x: 24, y: 76 }}
+        bounds={false}
+        position={undefined}
+      >
+        <div ref={statusCardNodeRef} className="driver-status-card">
+          <div className="driver-status-card-drag-handle modal-drag-handle" aria-label="Drag to move">
+            <GripVertical size={18} />
+            <h2 className="driver-status-card-title">DRONE STATUS</h2>
+          </div>
+          <div className="driver-status-card-content">
+            <div className="driver-status-card-section">
+              <div className="driver-status-card-row">
+                <span className="driver-status-card-label">Status</span>
+                <span
+                  className={`driver-status-card-badge driver-status-badge-${driverStatus}`}
+                >
+                  {driverStatus === 'driving' && <Navigation size={14} />}
+                  {driverStatus === 'charging' && <Zap size={14} className="charging-icon" />}
+                  {driverStatus === 'waiting' && <MapPin size={14} />}
+                  {driverStatus === 'driving' && 'Driving'}
+                  {driverStatus === 'charging' && 'Charging'}
+                  {driverStatus === 'waiting' && waitingLabel}
+                </span>
               </div>
-
-              <div className="driver-ride-panel-section">
-                <h3 className="driver-ride-panel-title">
-                  <Navigation size={16} />
-                  Drone status
-                </h3>
-                <div className="driver-ride-panel-row">
-                  <span className="driver-ride-panel-label">Status</span>
-                  <span
-                    className="driver-ride-panel-badge"
-                    style={{ '--status-color': getStatusDisplay(driverDrone).color }}
-                  >
-                    {getStatusDisplay(driverDrone).text}
-                  </span>
-                </div>
-                <div className="driver-ride-panel-row">
-                  <span className="driver-ride-panel-label">Model</span>
-                  <span className="driver-ride-panel-value">{driverDrone.name ?? driverDrone.model}</span>
-                </div>
-                <div className="driver-ride-panel-row">
-                  <span className="driver-ride-panel-label">Battery</span>
-                  <span className="driver-ride-panel-value driver-ride-battery">
-                    <Zap size={14} />
-                    {driverDrone.battery}%
-                  </span>
-                </div>
-                <div className="driver-ride-panel-row">
-                  <span className="driver-ride-panel-label">Range</span>
-                  <span className="driver-ride-panel-value">{driverDrone.range ?? '—'} km</span>
-                </div>
+              <div className="driver-status-card-row">
+                <span className="driver-status-card-label">Battery</span>
+                <span className={`driver-status-card-value driver-status-battery ${droneBattery < 25 ? 'low' : ''}`}>
+                  <Battery size={14} />
+                  {droneBattery}%
+                  {isCharging && <span className="driver-status-charging-indicator"> ↑</span>}
+                </span>
               </div>
-
-              <div className="driver-ride-panel-section">
-                <h3 className="driver-ride-panel-title">
-                  <Users size={16} />
-                  Load setup
-                </h3>
-                <div className="driver-ride-panel-row">
-                  <span className="driver-ride-panel-label">Capacity</span>
-                  <span className="driver-ride-panel-value">{getDroneCapacity(driverDrone.name)}</span>
+              {driverStatus === 'driving' && driverDrone && (
+                <>
+                  <div className="driver-status-card-row">
+                    <span className="driver-status-card-label">Model</span>
+                    <span className="driver-status-card-value">{driverDrone.name ?? driverDrone.model}</span>
+                  </div>
+                  <div className="driver-status-card-row">
+                    <span className="driver-status-card-label">Progress</span>
+                    <span className="driver-status-card-value">
+                      {Math.round((progressMap[driverDrone.id] ?? 0) * 100)}% to destination
+                    </span>
+                  </div>
+                  <div className="driver-status-route">
+                    <span className="driver-ride-origin">{driverDrone.tripOrigin?.name ?? 'Origin'}</span>
+                    <span className="driver-ride-arrow">→</span>
+                    <span className="driver-ride-dest">{driverDrone.tripDestination?.name ?? 'Destination'}</span>
+                  </div>
+                  <div className="driver-status-card-row">
+                    <span className="driver-status-card-label">Passengers</span>
+                    <span className="driver-status-card-value">
+                      {driverDrone.load ?? 0} of {getDroneCapacity(driverDrone.name)}
+                    </span>
+                  </div>
+                </>
+              )}
+              {driverStatus !== 'driving' && droneBattery < 100 && (
+                <div className="driver-status-charge-action">
+                  {!isCharging ? (
+                    <button
+                      type="button"
+                      className="driver-status-charge-btn"
+                      onClick={handleStartCharging}
+                    >
+                      <Zap size={16} />
+                      Charge Drone
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      className="driver-status-charge-btn charging"
+                      onClick={handleStopCharging}
+                    >
+                      <Zap size={16} className="charging-icon" />
+                      Charging... {droneBattery}%
+                    </button>
+                  )}
                 </div>
-                <div className="driver-ride-panel-row">
-                  <span className="driver-ride-panel-label">Passengers onboard</span>
-                  <span className="driver-ride-panel-value">
-                    {driverDrone.load ?? 0} of {getDroneCapacity(driverDrone.name)}
-                  </span>
-                </div>
-              </div>
+              )}
             </div>
           </div>
-        </Draggable>
-      )}
+        </div>
+      </Draggable>
 
       {notificationVisible && rideOfferData && (
         <div className="driver-notification">
@@ -384,6 +412,8 @@ export default function DriverMapPage() {
                 type="button"
                 className="driver-notification-btn driver-notification-btn-accept"
                 onClick={handleAccept}
+                disabled={batteryTooLow}
+                title={batteryTooLow ? 'Charge the drone first' : undefined}
               >
                 Accept
               </button>
@@ -391,6 +421,29 @@ export default function DriverMapPage() {
           </div>
         </div>
       )}
+
+      <Dialog open={lowBatteryModalOpen} onOpenChange={(open) => !open && setLowBatteryModalOpen(false)}>
+        <DialogContent className="driver-low-battery-modal" showCloseButton={true}>
+          <DialogHeader>
+            <DialogTitle className="driver-low-battery-title">
+              <Battery size={24} className="driver-low-battery-icon" />
+              Drone has no battery
+            </DialogTitle>
+          </DialogHeader>
+          <div className="driver-low-battery-content">
+            <p>Your drone cannot fly without battery. Please charge it before accepting rides.</p>
+          </div>
+          <DialogFooter showCloseButton={false}>
+            <Button variant="outline" onClick={() => setLowBatteryModalOpen(false)}>
+              Close
+            </Button>
+            <Button onClick={handleChargeFromModal} disabled={isCharging}>
+              <Zap size={16} />
+              Charge Drone
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={!!lastCompletedRide} onOpenChange={(open) => !open && setLastCompletedRide(null)}>
         <DialogContent className="driver-ride-completed-modal" showCloseButton={true}>
@@ -423,49 +476,6 @@ export default function DriverMapPage() {
         </DialogContent>
       </Dialog>
 
-      {!driverDrone && !notificationVisible && (
-        <div className="driver-no-assignment">
-          <div className="driver-battery-status">
-            <div className="driver-battery-level">
-              <Battery 
-                size={24} 
-                className={`driver-battery-icon ${droneBattery < 25 ? 'low' : ''}`}
-              />
-              <span className="driver-battery-percentage">{droneBattery}%</span>
-            </div>
-            {!isCharging && droneBattery < 100 && (
-              <button
-                type="button"
-                className="driver-charge-btn"
-                onClick={handleStartCharging}
-              >
-                <Zap size={16} />
-                Charge Drone
-              </button>
-            )}
-            {isCharging && (
-              <button
-                type="button"
-                className="driver-charge-btn charging"
-                onClick={handleStopCharging}
-              >
-                <Zap size={16} className="charging-icon" />
-                Charging... {droneBattery}%
-              </button>
-            )}
-          </div>
-          <p>
-            {waitingForNextRide 
-              ? 'Great job! Preparing next ride...' 
-              : 'Waiting for ride requests...'}
-          </p>
-          <p className="driver-no-assignment-hint">
-            {waitingForNextRide
-              ? 'Next ride request will appear shortly.'
-              : 'You will receive a notification when a ride is available.'}
-          </p>
-        </div>
-      )}
     </>
   )
 }
