@@ -42,7 +42,9 @@ export default function AdminDashboard() {
   } = useFleetDashboard({ cities, mapRef })
 
   const deliveringDrones = drones.filter((d) => d.status === 'delivering')
-  const { progressMap, getDronePosition, getDroneBearing } = useTripProgress(deliveringDrones)
+  const { progressMap, getDronePosition, getDroneBearing } = useTripProgress(deliveringDrones, {
+    durationMode: 'random' // 20-30 seconds per ride (no distance-based timing)
+  })
 
   const handleFocusDrone = (droneId) => {
     const drone = drones.find((d) => d.id === droneId)

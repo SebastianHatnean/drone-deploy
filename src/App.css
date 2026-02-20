@@ -169,7 +169,8 @@
 
 .driver-dashboard {
   padding: 60px 24px 24px 24px;
-  min-height: 100vh;
+  height: calc(100vh - 60px);
+  overflow-y: auto;
   background: #171717;
   color: #FFFFFF;
 }
@@ -308,6 +309,160 @@
   color: hsl(var(--muted-foreground));
   opacity: 0.9;
   margin: 0;
+}
+
+/* Driver status card – always visible, draggable */
+.driver-status-card {
+  position: fixed;
+  top: 76px;
+  left: 24px;
+  width: 320px;
+  background: rgba(23, 23, 23, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.4);
+  z-index: 100;
+}
+
+.driver-status-card-drag-handle {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  padding: 20px 24px 12px;
+  cursor: grab;
+}
+
+.driver-status-card-drag-handle:active {
+  cursor: grabbing;
+}
+
+.driver-status-card-title {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  margin: 0;
+  color: #FFFFFF;
+}
+
+.driver-status-card-content {
+  padding: 0 24px 24px;
+}
+
+.driver-status-card-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.driver-status-card-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+}
+
+.driver-status-card-label {
+  color: #9CA3AF;
+  font-weight: 500;
+}
+
+.driver-status-card-value {
+  color: #FFFFFF;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.driver-status-battery.low {
+  color: #EF4444;
+}
+
+.driver-status-charging-indicator {
+  color: #10B981;
+  font-weight: 700;
+  animation: battery-charge-pulse 1s ease-in-out infinite;
+}
+
+@keyframes battery-charge-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.driver-status-card-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.driver-status-badge-driving {
+  background: rgba(59, 130, 246, 0.25);
+  color: #60A5FA;
+}
+
+.driver-status-badge-charging {
+  background: rgba(16, 185, 129, 0.25);
+  color: #34D399;
+}
+
+.driver-status-badge-waiting {
+  background: rgba(156, 163, 175, 0.25);
+  color: #9CA3AF;
+}
+
+.driver-status-route {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.driver-status-charge-action {
+  margin-top: 8px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.driver-status-charge-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #10B981, #059669);
+  color: #FFFFFF;
+  font-size: 13px;
+  font-weight: 600;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.driver-status-charge-btn:hover {
+  background: linear-gradient(135deg, #059669, #047857);
+  transform: translateY(-1px);
+}
+
+.driver-status-charge-btn.charging {
+  background: linear-gradient(135deg, #F59E0B, #D97706);
+  cursor: pointer;
+}
+
+.driver-status-charge-btn.charging:hover {
+  background: linear-gradient(135deg, #D97706, #B45309);
 }
 
 /* Driver ride card – same dimensions as Fleet Overview */
@@ -619,6 +774,39 @@
   background: #059669;
 }
 
+.driver-notification-btn-accept:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #6B7280;
+}
+
+.driver-notification-btn-accept:disabled:hover {
+  background: #6B7280;
+}
+
+/* Low battery modal */
+.driver-low-battery-modal .driver-low-battery-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #EF4444;
+}
+
+.driver-low-battery-icon {
+  flex-shrink: 0;
+}
+
+.driver-low-battery-content {
+  padding: 8px 0;
+}
+
+.driver-low-battery-content p {
+  margin: 0;
+  color: hsl(var(--muted-foreground));
+  font-size: 14px;
+  line-height: 1.5;
+}
+
 /* City Selector (shadcn combobox) */
 .city-selector {
   position: relative;
@@ -803,23 +991,6 @@
   color: #FFFFFF;
 }
 
-.drone-card::-webkit-scrollbar {
-  width: 6px;
-}
-
-.drone-card::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 3px;
-}
-
-.drone-card::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 3px;
-}
-
-.drone-card::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
-}
 
 .drone-card-drag-handle {
   display: flex;
@@ -997,23 +1168,6 @@
   overflow-y: auto;
 }
 
-.drone-card-flights-list::-webkit-scrollbar {
-  width: 4px;
-}
-
-.drone-card-flights-list::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 2px;
-}
-
-.drone-card-flights-list::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 2px;
-}
-
-.drone-card-flights-list::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
-}
 
 .flight-item {
   padding: 12px;
@@ -1227,23 +1381,6 @@
   padding-bottom: 4px;
 }
 
-.ongoing-trips-list-wrapper::-webkit-scrollbar {
-  width: 6px;
-}
-
-.ongoing-trips-list-wrapper::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 3px;
-}
-
-.ongoing-trips-list-wrapper::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 3px;
-}
-
-.ongoing-trips-list-wrapper::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
-}
 
 .ongoing-trips-list {
   display: flex;
@@ -1522,24 +1659,6 @@
 }
 
 
-/* Custom Scrollbar */
-.fleet-table-wrapper.expanded::-webkit-scrollbar {
-  width: 6px;
-}
-
-.fleet-table-wrapper.expanded::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 3px;
-}
-
-.fleet-table-wrapper.expanded::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 3px;
-}
-
-.fleet-table-wrapper.expanded::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
-}
 
 /* Drone Table */
 .fleet-drone-table {
